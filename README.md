@@ -1,6 +1,6 @@
 # Transaction Invoker
 
-Example EIP-3074 invoker contract
+Example EIP-3074 invoker contract.
 
 ## About
 
@@ -38,7 +38,7 @@ Set chain ID in `hardhat.config.ts`.
 
 Hardhat does not support EIP-3074 at the moment. All testing is done on a live network, and deployment addresses are hardcoded in the tests.
 
-When you deploy your own contracts, replace `DEPLOYMENT_INVOKER` and `DEPLOYMENT_MOCK` in `test/TransactionInvoker.ts`, and `chainId` and `verifyingContract` in `scripts/payload.json`.
+When you deploy your contracts, replace `DEPLOYMENT_INVOKER` and `DEPLOYMENT_MOCK` in `test/TransactionInvoker.ts`, and `chainId` and `verifyingContract` in `scripts/signing/payload.json`.
 
 ```bash
 yarn hardhat test
