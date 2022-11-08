@@ -20,8 +20,6 @@
   "primaryType": "Transaction",
   "domain": {
     "name": "Transaction Invoker",
-    "version": "0.1.0",
-    "chainId": 4056,
-    "verifyingContract": "0xd6e1afe5cA8D00A2EFC01B89997abE2De47fdfAf"
+    "version": "0.1.0"
   }
 }
