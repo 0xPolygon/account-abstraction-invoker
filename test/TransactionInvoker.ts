@@ -3,10 +3,9 @@ import { MockContract, TransactionInvoker } from "../typechain-types";
 import { expect } from "chai";
 import getSignature from "../scripts/signing/getSignature";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import * as tracking from "../scripts/tracking/record";
 
 describe("TransactionInvoker", () => {
-  const DEPLOYMENT_INVOKER = "0xd6e1afe5cA8D00A2EFC01B89997abE2De47fdfAf";
-  const DEPLOYMENT_MOCK = "0x99dBE4AEa58E518C50a1c04aE9b48C9F6354612f";
   const INVALID_SIGNATURE = {
     r: ethers.constants.HashZero,
     s: ethers.constants.HashZero,
@@ -22,7 +21,6 @@ describe("TransactionInvoker", () => {
   const increment = "0xd09de08a";
   const causeRevert = "0x67192b63";
 
-  /*
   async function deployContracts() {
     const TransactionInvoker = await ethers.getContractFactory(
       "TransactionInvoker"
@@ -36,17 +34,31 @@ describe("TransactionInvoker", () => {
 
     return { invoker, mock };
   }
-  */
 
   before(async () => {
     [alice, bob] = await ethers.getSigners();
     alicePk = process.env.PK_ALICE!;
 
-    invoker = await ethers.getContractAt(
-      "TransactionInvoker",
-      DEPLOYMENT_INVOKER
-    );
-    mock = await ethers.getContractAt("MockContract", DEPLOYMENT_MOCK);
+    const record = tracking.read();
+    const redeploy = record === undefined || process.env.REDEPLOY === "true";
+
+    if (redeploy) {
+      const deployments = await deployContracts();
+      invoker = deployments.invoker;
+      mock = deployments.mock;
+
+      tracking.write({
+        chainId: network.config["chainId"],
+        invoker: invoker.address,
+        mock: mock.address,
+      });
+    } else {
+      invoker = await ethers.getContractAt(
+        "TransactionInvoker",
+        record.invoker
+      );
+      mock = await ethers.getContractAt("MockContract", record.mock);
+    }
   });
 
   describe("constructor", () => {
@@ -219,7 +231,7 @@ describe("TransactionInvoker", () => {
     before(async () => {
       invokerAsBob = await ethers.getContractAt(
         "TransactionInvoker",
-        DEPLOYMENT_INVOKER,
+        invoker.address,
         bob
       );
     });

@@ -3,6 +3,7 @@ import { TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD } from "hardhat/builtin-tasks/task
 import { resolve } from "path";
 import "@nomicfoundation/hardhat-toolbox";
 import * as dotenv from "dotenv";
+import * as tracking from "./scripts/tracking/record";
 
 dotenv.config();
 

@@ -1,6 +1,6 @@
 # Transaction Invoker
 
-Example EIP-3074 invoker contract.
+Example EIP-3074 (account abstraction) invoker contract.
 
 ## About
 
@@ -24,25 +24,25 @@ yarn
 
 ### Setup
 
-```bash
-mv .env.example .env
-```
+- Set RPC URL in `.env`
 
-Set RPC URL in `.env`.
+    ```bash
+    mv .env.example .env
+    ```
 
-Hardhat accounts `0` and `1` are included in `.env` for your convinience. Do not send real funds to those accounts.
+    Hardhat accounts `0` and `1` are included in `.env` for your convinience. Do not send real funds to those accounts.
 
-Set chain ID in `hardhat.config.ts`.
+- Set chain ID in `hardhat.config.ts`
 
 ### Test
 
-Hardhat does not support EIP-3074 at the moment. All testing is done on a live network, and deployment addresses are hardcoded in the tests.
-
-When you deploy your contracts, replace `DEPLOYMENT_INVOKER` and `DEPLOYMENT_MOCK` in `test/TransactionInvoker.ts`, and `chainId` and `verifyingContract` in `scripts/signing/payload.json`.
+Hardhat does not support EIP-3074 at the moment. All testing is done on a live network.
 
 ```bash
 yarn hardhat test
 ```
+
+To redeploy contracts, set `REDEPLOY=true`.
 
 ## Acknowledgements
 
