@@ -27,7 +27,7 @@ yarn
 - Set RPC URL in `.env`
 
     ```bash
-    mv .env.example .env
+    cp .env.example .env
     ```
 
     Hardhat accounts `0` and `1` are included in `.env` for your convinience. Do not send real funds to those accounts.

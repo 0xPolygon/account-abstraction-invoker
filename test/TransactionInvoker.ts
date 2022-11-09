@@ -6,6 +6,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import * as tracking from "../scripts/tracking/record";
 
 describe("TransactionInvoker", () => {
+  // TODO: Delete
   const INVALID_SIGNATURE = {
     r: ethers.constants.HashZero,
     s: ethers.constants.HashZero,
@@ -18,9 +19,11 @@ describe("TransactionInvoker", () => {
   let bob: SignerWithAddress;
   let alicePk: string;
 
+  // 4-byte signatures of mock functions
   const increment = "0xd09de08a";
   const causeRevert = "0x67192b63";
 
+  // Deployment fixture
   async function deployContracts() {
     const TransactionInvoker = await ethers.getContractFactory(
       "TransactionInvoker"
@@ -35,6 +38,9 @@ describe("TransactionInvoker", () => {
     return { invoker, mock };
   }
 
+  // Deploy contracts if scripts/tracking/out/record.json does not exist
+  // Otherwise, use existing contracts from record.json
+  // Set REDEPLOY=true to force re-deployment
   before(async () => {
     [alice, bob] = await ethers.getSigners();
     alicePk = process.env.PK_ALICE!;
