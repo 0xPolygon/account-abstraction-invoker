@@ -43,7 +43,7 @@ contract TransactionInvoker {
 
     bytes32 public constant TRANSACTION_TYPE =
         keccak256(
-            "Transaction(uint256 nonce,TransactionPayload[] payload)TransactionPayload(address to,uint256 value,uint256 gasLimit,bytes data)"
+            "Transaction(address from, uint256 nonce,TransactionPayload[] payload)TransactionPayload(address to,uint256 value,uint256 gasLimit,bytes data)"
         );
 
     bytes32 public constant TRANSACTION_PAYLOAD_TYPE =
@@ -62,6 +62,7 @@ contract TransactionInvoker {
     }
 
     struct Transaction {
+        address from;
         uint256 nonce;
         TransactionPayload[] payload;
     }
@@ -99,7 +100,7 @@ contract TransactionInvoker {
         require(transaction.payload.length > 0, "No transaction payload");
 
         address signer = authenticate(signature, transaction);
-        require(signer != address(0), "Invalid signature");
+        require(signer == transaction.from, "Invalid signature");
         require(transaction.nonce == nonces[signer], "Invalid nonce");
 
         nonces[signer] += 1;
@@ -202,6 +203,7 @@ contract TransactionInvoker {
             keccak256(
                 abi.encode(
                     TRANSACTION_TYPE,
+                    transaction.from,
                     transaction.nonce,
                     hash(transaction.payload)
                 )
