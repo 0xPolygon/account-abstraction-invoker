@@ -78,7 +78,7 @@ describe("TransactionInvoker", () => {
       const transactionType = ethers.utils.solidityKeccak256(
         ["string"],
         [
-          "Transaction(address from, uint256 nonce,TransactionPayload[] payload)TransactionPayload(address to,uint256 value,uint256 gasLimit,bytes data)",
+          "Transaction(address from,uint256 nonce,TransactionPayload[] payload)TransactionPayload(address to,uint256 value,uint256 gasLimit,bytes data)",
         ]
       );
       const transactionPayloadType = ethers.utils.solidityKeccak256(
