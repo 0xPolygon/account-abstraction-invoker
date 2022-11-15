@@ -43,7 +43,7 @@ contract TransactionInvoker {
 
     bytes32 public constant TRANSACTION_TYPE =
         keccak256(
-            "Transaction(address from, uint256 nonce,TransactionPayload[] payload)TransactionPayload(address to,uint256 value,uint256 gasLimit,bytes data)"
+            "Transaction(address from,uint256 nonce,TransactionPayload[] payload)TransactionPayload(address to,uint256 value,uint256 gasLimit,bytes data)"
         );
 
     bytes32 public constant TRANSACTION_PAYLOAD_TYPE =
