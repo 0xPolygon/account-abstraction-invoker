@@ -78,7 +78,7 @@ describe("TransactionInvoker", () => {
       const transactionType = ethers.utils.solidityKeccak256(
         ["string"],
         [
-          "Transaction(uint256 nonce,TransactionPayload[] payload)TransactionPayload(address to,uint256 value,uint256 gasLimit,bytes data)",
+          "Transaction(address from,uint256 nonce,TransactionPayload[] payload)TransactionPayload(address to,uint256 value,uint256 gasLimit,bytes data)",
         ]
       );
       const transactionPayloadType = ethers.utils.solidityKeccak256(
@@ -125,6 +125,7 @@ describe("TransactionInvoker", () => {
     it("Should revert on no payload", async () => {
       const nonce = await invoker.nonces(alice.address);
       const messageWithoutPayload = {
+        from: alice.address,
         nonce: nonce,
         payload: [],
       };
@@ -138,6 +139,7 @@ describe("TransactionInvoker", () => {
     it("Should revert on invalid signature", async () => {
       const nonce = await invoker.nonces(alice.address);
       const message = {
+        from: alice.address,
         nonce: nonce,
         payload: [
           { to: mock.address, value: 0, gasLimit: 1000000, data: increment },
@@ -152,6 +154,7 @@ describe("TransactionInvoker", () => {
     it("Should revert on invalid nonce", async () => {
       const invalidNonce = (await invoker.nonces(alice.address)).add("1");
       const messageWithInvalidNonce = {
+        from: alice.address,
         nonce: invalidNonce,
         payload: [
           { to: mock.address, value: 0, gasLimit: 1000000, data: increment },
@@ -167,6 +170,7 @@ describe("TransactionInvoker", () => {
     it("Should revert on call failure", async () => {
       const nonce = await invoker.nonces(alice.address);
       const messageWithRevertingCall = {
+        from: alice.address,
         nonce: nonce,
         payload: [
           { to: mock.address, value: 0, gasLimit: 1000000, data: increment },
@@ -183,6 +187,7 @@ describe("TransactionInvoker", () => {
     it("Should revert on leftover value", async () => {
       const nonce = await invoker.nonces(alice.address);
       const message = {
+        from: alice.address,
         nonce: nonce,
         payload: [
           { to: mock.address, value: 0, gasLimit: 1000000, data: increment },
@@ -198,6 +203,7 @@ describe("TransactionInvoker", () => {
     it("Should bundle transactions", async () => {
       const nonce = await invoker.nonces(alice.address);
       const message = {
+        from: alice.address,
         nonce,
         payload: [
           {
@@ -245,6 +251,7 @@ describe("TransactionInvoker", () => {
     it("Enables transaction sponsoring", async () => {
       const nonce = await invoker.nonces(alice.address);
       const message = {
+        from: alice.address,
         nonce,
         payload: [
           {
