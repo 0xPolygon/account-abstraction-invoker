@@ -20,7 +20,7 @@
   },
   "primaryType": "Transaction",
   "domain": {
-    "name": "Transaction Invoker",
-    "version": "0.1.0"
+    "name": "Account Abstraction Invoker",
+    "version": "1.0.0"
   }
 }

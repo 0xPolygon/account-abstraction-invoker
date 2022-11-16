@@ -1,10 +1,10 @@
-# Transaction Invoker
+# Account Abstraction Invoker
 
-Example EIP-3074 (account abstraction) invoker contract.
+Example account abstraction (EIP-3074) invoker contract.
 
 ## About
 
-Transaction Invoker uses [`AUTH`](https://eips.ethereum.org/EIPS/eip-3074#auth-0xf6) and [`AUTHCALL`](https://eips.ethereum.org/EIPS/eip-3074#authcall-0xf7) opcodes introduced in [EIP-3074 ](https://eips.ethereum.org/EIPS/eip-3074) to delegate control of the externally owned account (EOA) to itself (smart contract). This adds more functionality to EOAs, such as batching capabilities, allowing for gas sponsoring, expirations, scripting, and beyond.
+Account Abstraction Invoker uses [`AUTH`](https://eips.ethereum.org/EIPS/eip-3074#auth-0xf6) and [`AUTHCALL`](https://eips.ethereum.org/EIPS/eip-3074#authcall-0xf7) opcodes introduced in [EIP-3074 ](https://eips.ethereum.org/EIPS/eip-3074) to delegate control of the externally owned account (EOA) to itself (smart contract). This adds more functionality to EOAs, such as batching capabilities, allowing for gas sponsoring, expirations, scripting, and beyond.
 
 Use cases are showcased in the [tests](test/TransactionInvoker.ts).
 
@@ -17,22 +17,22 @@ Use cases are showcased in the [tests](test/TransactionInvoker.ts).
 ### Quickstart
 
 ```bash
-git clone https://github.com/ZeroEkkusu/transaction-invoker
-cd transaction-invoker
+git clone https://github.com/ZeroEkkusu/account-abstraction-invoker
+cd account-abstraction-invoker
 yarn
 ```
 
 ### Setup
 
-- Set RPC URL in `.env`
+```bash
+cp .env.example .env
+```
 
-    ```bash
-    cp .env.example .env
-    ```
+- Set RPC URL in `.env`
 
     Hardhat accounts `0` and `1` are included in `.env` for your convinience. Do not send real funds to those accounts.
 
-- Set chain ID in `hardhat.config.ts`
+- Change chain ID in `hardhat.config.ts`
 
 ### Test
 
@@ -42,7 +42,7 @@ Hardhat does not support EIP-3074 at the moment. All testing is done on a live n
 yarn hardhat test
 ```
 
-To redeploy contracts, set `REDEPLOY=true`.
+To redeploy contracts, set environment variable `REDEPLOY=true`. Otherwise, last deployed contract will be used.
 
 ## Acknowledgements
 

@@ -1,19 +1,13 @@
 import { ethers, network } from "hardhat";
-import { MockContract, TransactionInvoker } from "../typechain-types";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { AccountAbstractionInvoker } from "../typechain-types/AccountAbstractionInvoker";
+import { MockContract } from "../typechain-types/MockContract";
 import { expect } from "chai";
 import getSignature from "../scripts/signing/getSignature";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import * as tracking from "../scripts/tracking/record";
+import * as tracking from "../scripts/tracking/track";
 
-describe("TransactionInvoker", () => {
-  // TODO: Delete
-  const INVALID_SIGNATURE = {
-    r: ethers.constants.HashZero,
-    s: ethers.constants.HashZero,
-    v: false,
-  };
-
-  let invoker: TransactionInvoker;
+describe("AccountAbstractionInvoker", () => {
+  let invoker: AccountAbstractionInvoker;
   let mock: MockContract;
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
@@ -25,12 +19,12 @@ describe("TransactionInvoker", () => {
 
   // Deployment fixture
   async function deployContracts() {
-    const TransactionInvoker = await ethers.getContractFactory(
-      "TransactionInvoker"
+    const AccountAbstractionInvoker = await ethers.getContractFactory(
+      "AccountAbstractionInvoker"
     );
     const MockContract = await ethers.getContractFactory("MockContract");
 
-    const invoker = await TransactionInvoker.deploy();
+    const invoker = await AccountAbstractionInvoker.deploy();
     await invoker.deployed();
     const mock = await MockContract.deploy();
     await invoker.deployed();
@@ -60,7 +54,7 @@ describe("TransactionInvoker", () => {
       });
     } else {
       invoker = await ethers.getContractAt(
-        "TransactionInvoker",
+        "AccountAbstractionInvoker",
         record.invoker
       );
       mock = await ethers.getContractAt("MockContract", record.mock);
@@ -102,8 +96,8 @@ describe("TransactionInvoker", () => {
           "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)",
         ]
       );
-      const name = "Transaction Invoker";
-      const version = "0.1.0";
+      const name = "Account Abstraction Invoker";
+      const version = "1.0.0";
       const domainSeparator = ethers.utils.keccak256(
         ethers.utils.defaultAbiCoder.encode(
           ["bytes32", "bytes32", "bytes32", "uint256", "address"],
@@ -145,9 +139,11 @@ describe("TransactionInvoker", () => {
           { to: mock.address, value: 0, gasLimit: 1000000, data: increment },
         ],
       };
+      const invalidSignature = getSignature(message, alicePk);
+      invalidSignature.v = !invalidSignature.v;
 
       await expect(
-        invoker.invoke(INVALID_SIGNATURE, message)
+        invoker.invoke(invalidSignature, message)
       ).to.be.revertedWith("Invalid signature");
     });
 
@@ -238,11 +234,11 @@ describe("TransactionInvoker", () => {
   });
 
   describe("Sponsoring examples", () => {
-    let invokerAsBob: TransactionInvoker;
+    let invokerAsBob: AccountAbstractionInvoker;
 
     before(async () => {
       invokerAsBob = await ethers.getContractAt(
-        "TransactionInvoker",
+        "AccountAbstractionInvoker",
         invoker.address,
         bob
       );
@@ -276,10 +272,10 @@ describe("TransactionInvoker", () => {
       expect(await mock.counter()).to.equal(mockCounter.add("1"));
     });
 
-    /*
     it("Prevents manipulation", async () => {
       const nonce = await invoker.nonces(alice.address);
       const message = {
+        from: alice.address,
         nonce,
         payload: [
           {
@@ -295,9 +291,9 @@ describe("TransactionInvoker", () => {
       const modifiedMessage = message;
       modifiedMessage.payload[0].gasLimit = 5000000;
 
-      await expect(invokerAsBob.invoke(signature, modifiedMessage)).to.be
-        .reverted;
+      await expect(
+        invokerAsBob.invoke(signature, modifiedMessage)
+      ).to.be.revertedWith("Invalid signature");
     });
-    */
   });
 });
