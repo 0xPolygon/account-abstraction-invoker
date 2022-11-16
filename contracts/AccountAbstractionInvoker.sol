@@ -1,40 +1,40 @@
 // SPDX-License-Identifier: MIT
 
-/** MIT License
- *
- * Copyright (c) 2021 Maarten Zuidhoorn
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+/* MIT License
+
+Copyright (c) 2021 Maarten Zuidhoorn
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 
 pragma solidity ^0.8.0;
 
 /**
- * @title ERC-3074 (Batch) Transaction Invoker
- * @author Maarten Zuidhoorn <maarten@zuidhoorn.com>
+ * @title Account Abstraction Invoker
+ * @author Maarten Zuidhoorn <maarten@zuidhoorn.com>, modified by ZeroEkkusu.eth
  * @notice An EIP-3074 based contract that can send one or more arbitrary transactions in the context of an Externally
- *  Owned Address (EOA), by using `AUTH` and `AUTHCALL`. See https://github.com/Mrtenz/transaction-invoker for more
+ *  Owned Address (EOA), by using `AUTH` and `AUTHCALL`. See https://github.com/ZeroEkkusu/account-abstraction-invoker for more
  *  information.
  */
-contract TransactionInvoker {
-    string private constant NAME = "Transaction Invoker";
-    string private constant VERSION = "0.1.0";
+contract AccountAbstractionInvoker {
+    string private constant NAME = "Account Abstraction Invoker";
+    string private constant VERSION = "1.0.0";
 
     bytes32 public constant EIP712DOMAIN_TYPE =
         keccak256(
@@ -100,6 +100,8 @@ contract TransactionInvoker {
         require(transaction.payload.length > 0, "No transaction payload");
 
         address signer = authenticate(signature, transaction);
+        // Require the signer to be the from address
+        // because it is more likely to recover *some* address than address(0).
         require(signer == transaction.from, "Invalid signature");
         require(transaction.nonce == nonces[signer], "Invalid nonce");
 
@@ -229,9 +231,9 @@ contract TransactionInvoker {
     }
 
     /**
-     * @notice Get the EIP-712 hash for a transaction payload array.
+     * @notice Get the EIP-712 hash for a transaction payload.
      * @param payload The payload to hash.
-     * @return The hashed transaction payloads.
+     * @return The hashed transaction payload.
      */
     function hash(TransactionPayload calldata payload)
         private

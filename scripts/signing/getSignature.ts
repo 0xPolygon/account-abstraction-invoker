@@ -1,6 +1,6 @@
 import payload from "./payload.json";
 import sign from "./sign";
-import * as tracking from "../tracking/record";
+import * as tracking from "../tracking/track";
 
 export default function getSignature(message: any, privateKey: string) {
   const records = tracking.read();
