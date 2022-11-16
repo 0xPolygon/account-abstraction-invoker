@@ -29,7 +29,7 @@ pragma solidity ^0.8.0;
  * @title Account Abstraction Invoker
  * @author Maarten Zuidhoorn <maarten@zuidhoorn.com>, modified by ZeroEkkusu.eth
  * @notice An EIP-3074 based contract that can send one or more arbitrary transactions in the context of an Externally
- *  Owned Address (EOA), by using `AUTH` and `AUTHCALL`. See https://github.com/ZeroEkkusu/account-abstraction-invoker for more
+ *  Owned Address (EOA), by using `AUTH` and `AUTHCALL`. See https://github.com/0xPolygon/account-abstraction-invoker for more
  *  information.
  */
 contract AccountAbstractionInvoker {

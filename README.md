@@ -17,7 +17,7 @@ Use cases are showcased in the [tests](test/TransactionInvoker.ts).
 ### Quickstart
 
 ```bash
-git clone https://github.com/ZeroEkkusu/account-abstraction-invoker
+git clone https://github.com/0xPolygon/account-abstraction-invoker
 cd account-abstraction-invoker
 yarn
 ```
