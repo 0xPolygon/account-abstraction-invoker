@@ -5,10 +5,10 @@ Call `getSignature` with `message` and `privateKey`:
 ```typescript
 const message = {
   from: 0x0000000000000000000000000000000000000000,
-  nonce: nonce,
+  nonce: 0,
   payload: [
     { to: "0x0000000000000000000000000000000000000000", value: 0, gasLimit: 0, data: "0x" }
-  ],
+  ]
 };
 const signature = getSignature(message, privateKey);
 ```
