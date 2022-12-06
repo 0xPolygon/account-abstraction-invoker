@@ -8,6 +8,8 @@ Account Abstraction Invoker uses [`AUTH`](https://eips.ethereum.org/EIPS/eip-307
 
 Use cases are showcased in the [tests](test/TransactionInvoker.ts).
 
+<center><img alt="Sponsoring example" src="./img/AAI-sponsoring.png" width="693px" /></center>
+
 [Commit](https://eips.ethereum.org/EIPS/eip-3074#understanding-commit) is EIP-712 hash of the this [structure](scripts/signing/README.md). This means the invoker inherits the security of EIP-712, in addition to following the [Secure Invoker](https://eips.ethereum.org/EIPS/eip-3074#secure-invokers) recommendations.
 
 ## Requirements
