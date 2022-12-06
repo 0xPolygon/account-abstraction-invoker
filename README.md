@@ -8,7 +8,7 @@ Account Abstraction Invoker uses [`AUTH`](https://eips.ethereum.org/EIPS/eip-307
 
 Use cases are showcased in the [tests](test/TransactionInvoker.ts).
 
-[Commit](https://eips.ethereum.org/EIPS/eip-3074#understanding-commit) is EIP-712 hash of the this [structure](scripts/signing/README.md).
+[Commit](https://eips.ethereum.org/EIPS/eip-3074#understanding-commit) is EIP-712 hash of the this [structure](scripts/signing/README.md). This means the invoker inherits the security of EIP-712, in addition to following the [Secure Invoker](https://eips.ethereum.org/EIPS/eip-3074#secure-invokers) recommendations.
 
 ## Requirements
 
@@ -44,7 +44,7 @@ Hardhat does not support EIP-3074 at the moment. All testing is done on a live n
 yarn hardhat test
 ```
 
-To redeploy contracts, set environment variable `REDEPLOY=true`. Otherwise, last deployed contract will be used.
+To redeploy contracts, set environment variable `REDEPLOY=true`. Otherwise, last deployed contracts will be used.
 
 ## Acknowledgements
 
