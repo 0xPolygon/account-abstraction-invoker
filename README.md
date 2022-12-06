@@ -6,7 +6,7 @@ Example account abstraction (EIP-3074) invoker contract.
 
 Account Abstraction Invoker uses [`AUTH`](https://eips.ethereum.org/EIPS/eip-3074#auth-0xf6) and [`AUTHCALL`](https://eips.ethereum.org/EIPS/eip-3074#authcall-0xf7) opcodes introduced in [EIP-3074 ](https://eips.ethereum.org/EIPS/eip-3074) to delegate control of the externally owned account (EOA) to itself (smart contract). This adds more functionality to EOAs, such as batching capabilities, allowing for gas sponsoring, expirations, scripting, and beyond.
 
-Use cases are showcased in the [tests](test/TransactionInvoker.ts).
+Use cases are showcased in the [tests](test/TransactionInvoker.ts). The invoker can call any contract:
 
 <center><img alt="Sponsoring example" src="./img/AAI-sponsoring.png" width="693px" /></center>
 
