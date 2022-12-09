@@ -37,9 +37,14 @@ describe("AccountAbstractionInvoker", () => {
   // Set REDEPLOY=true to force re-deployment
   before(async () => {
     [alice, bob] = await ethers.getSigners();
-    alicePk = process.env.PK_ALICE!;
+    alicePk =
+      "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 
-    const record = tracking.read();
+    const deployments = await deployContracts();
+    invoker = deployments.invoker;
+    mock = deployments.mock;
+
+    /*const record = tracking.read();
     const redeploy = record === undefined || process.env.REDEPLOY === "true";
 
     if (redeploy) {
@@ -58,7 +63,7 @@ describe("AccountAbstractionInvoker", () => {
         record.invoker
       );
       mock = await ethers.getContractAt("MockContract", record.mock);
-    }
+    }*/
   });
 
   describe("constructor", () => {

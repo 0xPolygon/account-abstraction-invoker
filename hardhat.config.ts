@@ -3,8 +3,18 @@ import { TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD } from "hardhat/builtin-tasks/task
 import { resolve } from "path";
 import "@nomicfoundation/hardhat-toolbox";
 import * as dotenv from "dotenv";
+import { Common } from "@nomicfoundation/ethereumjs-common";
 
 dotenv.config();
+
+// EIP-3074 support
+const originalCustom = Common.custom;
+Common.custom = (params, opts) => {
+  return originalCustom.call(Common, params, {
+    ...opts,
+    eips: [...(opts.eips ?? []), 3074],
+  });
+};
 
 /**
  * This overrides the standard compiler version to use a custom compiled version.
@@ -28,7 +38,7 @@ subtask<{ solcVersion: string }>(
 );
 
 const config: HardhatUserConfig = {
-  defaultNetwork: "devnet",
+  //defaultNetwork: "devnet",
   solidity: {
     version: "0.8.2",
   },
