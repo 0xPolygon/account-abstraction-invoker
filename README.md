@@ -1,14 +1,14 @@
 # Account Abstraction Invoker
 
-Example account abstraction (EIP-3074) invoker contract.
+Example account abstraction (EIP-3074) invoker contract. For demonstration purposes only.
 
 ## About
 
 Account Abstraction Invoker uses [`AUTH`](https://eips.ethereum.org/EIPS/eip-3074#auth-0xf6) and [`AUTHCALL`](https://eips.ethereum.org/EIPS/eip-3074#authcall-0xf7) opcodes introduced in [EIP-3074 ](https://eips.ethereum.org/EIPS/eip-3074) to delegate control of the externally owned account (EOA) to itself (smart contract). This adds more functionality to EOAs, such as batching capabilities, allowing for gas sponsoring, expirations, scripting, and beyond.
 
-Use cases are showcased in the [tests](test/TransactionInvoker.ts). The invoker works with ✨ _all_ ✨ contracts:
+Use cases are showcased in the [tests](test/AccountAbstractionInvoker.ts). The invoker works with ✨ _all_ ✨ contracts:
 
-<center><img alt="Sponsoring example" src="./img/sponsoring-example.png" width="693px" /></center>
+<img alt="Sponsoring example" src="./img/sponsoring-example.png" width="693px" />
 
 [Commit](https://eips.ethereum.org/EIPS/eip-3074#understanding-commit) is EIP-712 hash of the this [structure](scripts/signing/README.md). This means the invoker inherits the security of EIP-712, in addition to following the [Secure Invoker](https://eips.ethereum.org/EIPS/eip-3074#secure-invokers) recommendations.
 
