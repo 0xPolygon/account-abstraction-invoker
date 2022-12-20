@@ -23,7 +23,7 @@ contract MockContract {
         delete lastSender;
         delete counter;
 
-        (bool success, ) = msg.sender.call{value: address(this).balance}("");
+        (bool success,) = msg.sender.call{value: address(this).balance}("");
         require(success);
     }
 }

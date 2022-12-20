@@ -26,7 +26,7 @@ pragma solidity ^0.8.0;
 
 /**
  * @title Account Abstraction Invoker
- * @author Maarten Zuidhoorn <maarten@zuidhoorn.com>, ZeroEkkusu.eth
+ * @author Maarten Zuidhoorn <maarten@zuidhoorn.com>, Zero Ekkusu <zeroekkusu.eth>
  * @notice An EIP-3074 based contract that can send one or more arbitrary transactions in the context of an Externally
  *  Owned Address (EOA), by using `AUTH` and `AUTHCALL`. See https://github.com/0xPolygon/account-abstraction-invoker for more
  *  information.
@@ -45,7 +45,7 @@ contract AccountAbstractionInvoker {
     bytes32 public constant TRANSACTION_PAYLOAD_TYPE =
         keccak256("TransactionPayload(address to,uint256 value,uint256 gasLimit,bytes data)");
 
-    bytes32 public immutable DOMAIN_SEPARATOR;
+    bytes32 public domainSeparator;
 
     mapping(address => uint256) public nonces;
 
@@ -69,8 +69,11 @@ contract AccountAbstractionInvoker {
     }
 
     constructor() {
-        // Since the domain separator depends on the chain ID and contract address, it is dynamically calculated here.
-        DOMAIN_SEPARATOR = keccak256(
+        updateDomainSeparator();
+    }
+
+    function updateDomainSeparator() public {
+        domainSeparator = keccak256(
             abi.encode(
                 EIP712DOMAIN_TYPE,
                 keccak256(abi.encodePacked(NAME)),
@@ -86,17 +89,23 @@ contract AccountAbstractionInvoker {
      *  reverts if the signature is invalid, the nonce is incorrect, or one of the calls failed.
      * @param signature The signature of the transactions to verify.
      * @param transaction The nonce and payload(s) to send.
+     * @dev If excess funds have been sent to the invoker, the last callee could potentially re-enter the function
+     * and send the remainder back to them, which would prevent the function from reverting and allow them to steal the funds.
+     * However, this scenario requires the user to deliberately call a malicious contract and supply excess funds,
+     * so re-entrancy protection has not been implemented in order to save on gas costs.
      */
     function invoke(Signature calldata signature, Transaction calldata transaction) external payable {
         require(transaction.payload.length > 0, "No transaction payload");
 
         address signer = authenticate(signature, transaction);
-        // Require the signer to be the from address
+        // We require the signer to be the from address
         // because it is more likely to recover *some* address than address(0).
         require(signer == transaction.from, "Invalid signature");
         require(transaction.nonce == nonces[signer], "Invalid nonce");
 
         nonces[signer] += 1;
+
+        uint256 startBalance = address(this).balance - msg.value;
 
         for (uint256 i = 0; i < transaction.payload.length; i++) {
             bool success = call(transaction.payload[i]);
@@ -104,8 +113,8 @@ contract AccountAbstractionInvoker {
         }
 
         // To ensure that the caller does not send more funds than used in the transaction payload, we check if the contract
-        // balance is zero here.
-        require(address(this).balance == 0, "Invalid balance");
+        // balance is less or equal to the starting balance here.
+        require(address(this).balance <= startBalance, "Invalid balance");
     }
 
     /**
@@ -156,7 +165,7 @@ contract AccountAbstractionInvoker {
      * @return The commit hash, including the EIP-712 prefix and domain separator.
      */
     function getCommitHash(Transaction calldata transaction) private view returns (bytes32) {
-        return keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), DOMAIN_SEPARATOR, hash(transaction)));
+        return keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator, hash(transaction)));
     }
 
     /**
