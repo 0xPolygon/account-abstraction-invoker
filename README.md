@@ -10,7 +10,7 @@ Use cases are showcased in the [tests](test/AccountAbstractionInvoker.ts). The i
 
 <img alt="Sponsoring example" src="./img/sponsoring-example.png" width="693px" />
 
-[Commit](https://eips.ethereum.org/EIPS/eip-3074#understanding-commit) is EIP-712 hash of the this [structure](scripts/signing/README.md). This means the invoker inherits the security of EIP-712, in addition to following the [Secure Invoker](https://eips.ethereum.org/EIPS/eip-3074#secure-invokers) recommendations.
+[Commit](https://eips.ethereum.org/EIPS/eip-3074#understanding-commit) is EIP-712 hash of the this [structure](scripts/signing/README.md). This means the invoker inherits the security of EIP-712, in addition to following the [Secure Invoker](https://eips.ethereum.org/EIPS/eip-3074#secure-invokers) recommendations and implementing additional security measures.
 
 ## Requirements
 

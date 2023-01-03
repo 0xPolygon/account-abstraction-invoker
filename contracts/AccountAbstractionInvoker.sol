@@ -45,7 +45,7 @@ contract AccountAbstractionInvoker {
     bytes32 public constant TRANSACTION_PAYLOAD_TYPE =
         keccak256("TransactionPayload(address to,uint256 value,uint256 gasLimit,bytes data)");
 
-    bytes32 public domainSeparator;
+    bytes32 public DOMAIN_SEPARATOR;
 
     mapping(address => uint256) public nonces;
 
@@ -73,7 +73,7 @@ contract AccountAbstractionInvoker {
     }
 
     function updateDomainSeparator() public {
-        domainSeparator = keccak256(
+        DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 EIP712DOMAIN_TYPE,
                 keccak256(abi.encodePacked(NAME)),
@@ -89,8 +89,8 @@ contract AccountAbstractionInvoker {
      *  reverts if the signature is invalid, the nonce is incorrect, or one of the calls failed.
      * @param signature The signature of the transactions to verify.
      * @param transaction The nonce and payload(s) to send.
-     * @dev If excess funds have been sent to the invoker, the last callee could potentially re-enter the function
-     * and send the remainder back to them, which would prevent the function from reverting and allow them to steal the funds.
+     * @dev If excess funds have been sent to the invoker, a callee could potentially re-enter the function and send
+     * the difference back to them, which would prevent the function from reverting and allow them to steal the funds.
      * However, this scenario requires the user to deliberately call a malicious contract and supply excess funds,
      * so re-entrancy protection has not been implemented in order to save on gas costs.
      */
@@ -165,7 +165,7 @@ contract AccountAbstractionInvoker {
      * @return The commit hash, including the EIP-712 prefix and domain separator.
      */
     function getCommitHash(Transaction calldata transaction) private view returns (bytes32) {
-        return keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator, hash(transaction)));
+        return keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), DOMAIN_SEPARATOR, hash(transaction)));
     }
 
     /**

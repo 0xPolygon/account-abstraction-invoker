@@ -111,7 +111,7 @@ describe("AccountAbstractionInvoker", () => {
         )
       );
 
-      expect(await invoker.domainSeparator()).to.equal(domainSeparator);
+      expect(await invoker.DOMAIN_SEPARATOR()).to.equal(domainSeparator);
     });
   });
 
