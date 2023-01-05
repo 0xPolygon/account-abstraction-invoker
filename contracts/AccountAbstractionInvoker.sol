@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-/* MIT License
+/* Parts of this file were based on Mrtenz/transaction-invoker:
 
 Copyright (c) 2021 Maarten Zuidhoorn
 
@@ -26,7 +26,7 @@ pragma solidity ^0.8.0;
 
 /**
  * @title Account Abstraction Invoker
- * @author Maarten Zuidhoorn <maarten@zuidhoorn.com>, Zero Ekkusu <zeroekkusu.eth>
+ * @author Zero Ekkusu <zeroekkusu.eth>, Maarten Zuidhoorn <maarten@zuidhoorn.com>
  * @notice An EIP-3074 based contract that can send one or more arbitrary transactions in the context of an Externally
  *  Owned Address (EOA), by using `AUTH` and `AUTHCALL`. See https://github.com/0xPolygon/account-abstraction-invoker for more
  *  information.
@@ -90,9 +90,10 @@ contract AccountAbstractionInvoker {
      * @param signature The signature of the transactions to verify.
      * @param transaction The nonce and payload(s) to send.
      * @dev If excess funds have been sent to the invoker, a callee could potentially re-enter the function and send
-     * the difference back to them, which would prevent the function from reverting and allow them to steal the funds.
+     * the difference to them, which would prevent the function from reverting at the end and allow them to steal the funds.
      * However, this scenario requires the user to deliberately call a malicious contract and supply excess funds,
-     * so re-entrancy protection has not been implemented in order to save on gas costs.
+     * and the callee to know which invoker is being used, so re-entrancy protection has not been implemented in order to
+     * save on gas costs.
      */
     function invoke(Signature calldata signature, Transaction calldata transaction) external payable {
         require(transaction.payload.length > 0, "No transaction payload");
