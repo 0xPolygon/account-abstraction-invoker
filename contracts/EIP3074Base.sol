@@ -25,15 +25,17 @@ SOFTWARE.*/
 pragma solidity ^0.8.0;
 
 /**
- * @title Account Abstraction Invoker
- * @author Maarten Zuidhoorn <maarten@zuidhoorn.com>, ZeroEkkusu.eth
+ * @title EIP3074Base
+ * @author Maarten Zuidhoorn <maarten@zuidhoorn.com>, ZeroEkkusu.eth, TBD...
  * @notice An EIP-3074 based contract that can send one or more arbitrary transactions in the context of an Externally
  *  Owned Address (EOA), by using `AUTH` and `AUTHCALL`. See https://github.com/0xPolygon/account-abstraction-invoker for more
  *  information.
  */
-contract AccountAbstractionInvoker {
-    string private constant NAME = "Account Abstraction Invoker";
-    string private constant VERSION = "1.0.0";
+contract EIP3074Base {
+
+    function eip712Name() internal virtual pure returns  (string memory) { return ""; }
+
+    function eip712Version() internal virtual pure returns  (string memory) { return ""; }
 
     bytes32 public constant EIP712DOMAIN_TYPE =
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
@@ -46,8 +48,6 @@ contract AccountAbstractionInvoker {
         keccak256("TransactionPayload(address to,uint256 value,uint256 gasLimit,bytes data)");
 
     bytes32 public immutable DOMAIN_SEPARATOR;
-
-    mapping(address => uint256) public nonces;
 
     struct Signature {
         uint256 r;
@@ -73,63 +73,16 @@ contract AccountAbstractionInvoker {
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 EIP712DOMAIN_TYPE,
-                keccak256(abi.encodePacked(NAME)),
-                keccak256(abi.encodePacked(VERSION)),
+                keccak256(abi.encodePacked(eip712Name())),
+                keccak256(abi.encodePacked(eip712Version())),
                 block.chainid,
                 address(this)
             )
         );
     }
 
-    /**
-     * @notice Authenticate and send the provided transaction payload(s) in the context of the signer. This function
-     *  reverts if the signature is invalid, the nonce is incorrect, or one of the calls failed.
-     * @param signature The signature of the transactions to verify.
-     * @param transaction The nonce and payload(s) to send.
-     */
-    function invoke(Signature calldata signature, Transaction calldata transaction) external payable {
-        require(transaction.payloads.length > 0, "No transaction payload");
-
-        address signer = authenticate(signature, transaction);
-        // Require the signer to be the from address
-        // because it is more likely to recover *some* address than address(0).
-        require(signer == transaction.from, "Invalid signature");
-        require(transaction.nonce == nonces[signer], "Invalid nonce");
-
-        nonces[signer] += 1;
-
-        for (uint256 i = 0; i < transaction.payloads.length; i++) {
-            bool success = call(transaction.payloads[i]);
-            require(success, "Transaction failed");
-        }
-
-        // To ensure that the caller does not send more funds than used in the transaction payload, we check if the contract
-        // balance is zero here.
-        require(address(this).balance == 0, "Invalid balance");
-    }
-
-    /**
-     * @notice Authenticate based on the signature and transaction. This will calculate the EIP-712 message hash and use
-     *  that as commit for authentication.
-     * @param signature The signature to authenticate with.
-     * @param transaction The transaction that was signed.
-     * @return signer The recovered signer, or `0x0` if the signature is invalid.
-     */
-    function authenticate(Signature calldata signature, Transaction calldata transaction)
-        private
-        view
-        returns (address signer)
-    {
-        bytes32 commit = getCommitHash(transaction);
-
-        uint256 r = signature.r;
-        uint256 s = signature.s;
-        bool v = signature.v;
-
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            signer := auth(commit, v, r, s)
-        }
+    function validatePayload(TransactionPayload calldata /* payload */ ) internal virtual returns (bool) {
+        return true;
     }
 
     /**
@@ -138,25 +91,18 @@ contract AccountAbstractionInvoker {
      * @param payload The payload to send.
      * @return success Whether the call succeeded.
      */
-    function call(TransactionPayload calldata payload) private returns (bool success) {
+    function call(TransactionPayload calldata payload) internal returns (bool success) {
         uint256 gasLimit = payload.gasLimit;
         address to = payload.to;
         uint256 value = payload.value;
         bytes memory data = payload.data;
 
+        require(validatePayload(payload));
+
         // solhint-disable-next-line no-inline-assembly
         assembly {
             success := authcall(gasLimit, to, value, 0, add(data, 0x20), mload(data), 0, 0)
         }
-    }
-
-    /**
-     * @notice Get the EIP-712 commit hash for a transaction, that can be used for authentication.
-     * @param transaction The transaction to hash.
-     * @return The commit hash, including the EIP-712 prefix and domain separator.
-     */
-    function getCommitHash(Transaction calldata transaction) public view returns (bytes32) {
-        return keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), DOMAIN_SEPARATOR, hashTransaction(transaction)));
     }
 
     /**
