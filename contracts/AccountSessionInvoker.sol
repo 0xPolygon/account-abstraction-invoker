@@ -9,7 +9,7 @@ contract AccountSessionInvoker is EIP3074Base {
     function eip712Version() internal override pure returns  (string memory) { return "1.0.0"; }
 
     struct SessionToken {
-        address relayer; // token is bound to specific (trusted) relayer
+        address delegate; // token is bound to specific (trusted) delegate
         uint256 expiration; // time of token expiration
     }
 
@@ -27,7 +27,7 @@ contract AccountSessionInvoker is EIP3074Base {
 
         require(signer == transaction.from, "Invalid signature"); // TODO: FROM is not part of signature here ...?
         require(token.expiration < block.timestamp, "token has expired");
-        require(msg.sender == token.relayer, "token can only be used by designated relayer");
+        require(msg.sender == token.delegate, "token can only be used by designated delegate");
 
         for (uint256 i = 0; i < transaction.payloads.length; i++) {
             bool success = call(transaction.payloads[i]);
@@ -61,11 +61,11 @@ contract AccountSessionInvoker is EIP3074Base {
     }
 
     bytes32 public constant SESSION_TOKEN_TYPE = keccak256(
-        "SessionToken(address relayer,uint256 expiration)"
+        "SessionToken(address delegate,uint256 expiration)"
     );
 
     function hashSessionToken(SessionToken calldata token) public pure returns (bytes32) {
-        return keccak256(abi.encode(SESSION_TOKEN_TYPE, token.relayer, token.expiration));
+        return keccak256(abi.encode(SESSION_TOKEN_TYPE, token.delegate, token.expiration));
     }
 
 }
