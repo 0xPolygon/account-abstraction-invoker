@@ -143,7 +143,7 @@ describe("AccountAbstractionInvoker", () => {
       invalidSignature.v = !invalidSignature.v;
 
       await expect(
-        invoker.invoke(invalidSignature, message)
+        invoker.invoke(invalidSignature, message, { gasLimit: 20000000 })
       ).to.be.revertedWith("Invalid signature");
     });
 

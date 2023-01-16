@@ -43,6 +43,9 @@ const config: HardhatUserConfig = {
     version: "0.8.2",
   },
   networks: {
+    localhost: {
+      chainId: 31337,
+    },
     devnet: {
       chainId: 4056,
       url: process.env.RPC_URL || "",
