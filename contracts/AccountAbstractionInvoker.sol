@@ -24,6 +24,8 @@ SOFTWARE.*/
 
 pragma solidity ^0.8.0;
 
+import {ReentrancyGuard} from "./utils/ReentrancyGuard.sol";
+
 /**
  * @title Account Abstraction Invoker
  * @author Zero Ekkusu <zeroekkusu.eth>, Maarten Zuidhoorn <maarten@zuidhoorn.com>
@@ -31,7 +33,7 @@ pragma solidity ^0.8.0;
  *  Owned Address (EOA), by using `AUTH` and `AUTHCALL`. See https://github.com/0xPolygon/account-abstraction-invoker for more
  *  information.
  */
-contract AccountAbstractionInvoker {
+contract AccountAbstractionInvoker is ReentrancyGuard {
     string private constant NAME = "Account Abstraction Invoker";
     string private constant VERSION = "1.0.0";
 
@@ -72,6 +74,9 @@ contract AccountAbstractionInvoker {
         updateDomainSeparator();
     }
 
+    /**
+     * @notice This function can be used to update the domain separator, in case the chain ID changes.
+     */
     function updateDomainSeparator() public {
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
@@ -89,13 +94,8 @@ contract AccountAbstractionInvoker {
      *  reverts if the signature is invalid, the nonce is incorrect, or one of the calls failed.
      * @param signature The signature of the transactions to verify.
      * @param transaction The nonce and payload(s) to send.
-     * @dev If excess funds have been sent to the invoker, a callee could potentially re-enter the function and send
-     * the difference to them, which would prevent the function from reverting at the end and allow them to steal the funds.
-     * However, this scenario requires the user to deliberately call a malicious contract and supply excess funds,
-     * and the callee to know which invoker is being used, so re-entrancy protection has not been implemented in order to
-     * save on gas costs.
      */
-    function invoke(Signature calldata signature, Transaction calldata transaction) external payable {
+    function invoke(Signature calldata signature, Transaction calldata transaction) external payable nonReentrant {
         require(transaction.payload.length > 0, "No transaction payload");
 
         address signer = authenticate(signature, transaction);
