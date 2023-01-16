@@ -20,17 +20,16 @@ contract AccountSessionInvoker is EIP3074Base {
         return toWhitelist[payload.to];
     }
 
-    function invoke(Signature calldata signature, SessionToken calldata token, Transaction calldata transaction) external payable {
-        require(transaction.payloads.length > 0, "No transaction payload");
+    function invoke(Signature calldata signature, SessionToken calldata token, TransactionPayload[] calldata payloads) external payable {
+        require(payloads.length > 0, "No transaction payloads");
 
         address signer = authenticate(signature, token);
 
-        require(signer == transaction.from, "Invalid signature"); // TODO: FROM is not part of signature here ...?
         require(token.expiration < block.timestamp, "token has expired");
         require(msg.sender == token.delegate, "token can only be used by designated delegate");
 
-        for (uint256 i = 0; i < transaction.payloads.length; i++) {
-            bool success = call(transaction.payloads[i]);
+        for (uint256 i = 0; i < payloads.length; i++) {
+            bool success = call(payloads[i]);
             require(success, "Transaction failed");
         }
 
