@@ -97,7 +97,7 @@ contract EIP3074Base {
         uint256 value = payload.value;
         bytes memory data = payload.data;
 
-        require(validatePayload(payload));
+        require(validatePayload(payload), "payload validation failed");
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
