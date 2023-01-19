@@ -13,11 +13,20 @@ contract AccountSessionInvoker is EIP3074Base {
         uint256 expiration; // time of token expiration
     }
 
-    // TODO: manage whitelist ...
-    mapping(address => bool) public toWhitelist;
+    constructor (address[] memory allowed) EIP3074Base() {
+        for (uint256 i = 0; i < allowed.length; i++) {
+            whitelist[allowed[i]] = true;
+        }
+    }
+
+    mapping(address => bool) public whitelist;
+
+    function isWhitelisted(address addr) public view returns (bool) {
+        return whitelist[addr];
+    }
 
     function validatePayload(TransactionPayload calldata payload) internal override returns (bool) {
-        return toWhitelist[payload.to];
+        return whitelist[payload.to];
     }
 
     function invoke(Signature calldata signature, SessionToken calldata token, TransactionPayload[] calldata payloads) external payable {

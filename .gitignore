@@ -10,3 +10,5 @@ cache
 artifacts
 
 scripts/tracking/out
+
+.idea
