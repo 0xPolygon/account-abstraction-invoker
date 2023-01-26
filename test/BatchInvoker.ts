@@ -1,13 +1,13 @@
 import { ethers, network } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { AccountAbstractionInvoker } from "../typechain-types/AccountAbstractionInvoker";
+import { BatchInvoker } from "../typechain-types/BatchInvoker";
 import { MockContract } from "../typechain-types/MockContract";
 import { expect } from "chai";
 import getSignature from "../scripts/signing/getSignature";
 import * as tracking from "../scripts/tracking/track";
 
-describe("AccountAbstractionInvoker", () => {
-  let invoker: AccountAbstractionInvoker;
+describe("BatchInvoker", () => {
+  let invoker: BatchInvoker;
   let mock: MockContract;
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
@@ -19,12 +19,10 @@ describe("AccountAbstractionInvoker", () => {
 
   // Deployment fixture
   async function deployContracts() {
-    const AccountAbstractionInvoker = await ethers.getContractFactory(
-      "AccountAbstractionInvoker"
-    );
+    const BatchInvoker = await ethers.getContractFactory("BatchInvoker");
     const MockContract = await ethers.getContractFactory("MockContract");
 
-    const invoker = await AccountAbstractionInvoker.deploy();
+    const invoker = await BatchInvoker.deploy();
     await invoker.deployed();
     const mock = await MockContract.deploy();
     await invoker.deployed();
@@ -53,10 +51,7 @@ describe("AccountAbstractionInvoker", () => {
         mock: mock.address,
       });
     } else {
-      invoker = await ethers.getContractAt(
-        "AccountAbstractionInvoker",
-        record.invoker
-      );
+      invoker = await ethers.getContractAt("BatchInvoker", record.invoker);
       mock = await ethers.getContractAt("MockContract", record.mock);
     }
   });
@@ -72,7 +67,7 @@ describe("AccountAbstractionInvoker", () => {
       const transactionType = ethers.utils.solidityKeccak256(
         ["string"],
         [
-          "Transaction(address from,uint256 nonce,TransactionPayload[] payload)TransactionPayload(address to,uint256 value,uint256 gasLimit,bytes data)",
+          "Transaction(address from,uint256 nonce,TransactionPayload[] payloads)TransactionPayload(address to,uint256 value,uint256 gasLimit,bytes data)",
         ]
       );
       const transactionPayloadType = ethers.utils.solidityKeccak256(
@@ -82,9 +77,9 @@ describe("AccountAbstractionInvoker", () => {
         ]
       );
 
-      expect(await invoker.EIP712DOMAIN_TYPE()).to.equal(eip712DomainType);
-      expect(await invoker.TRANSACTION_TYPE()).to.equal(transactionType);
-      expect(await invoker.TRANSACTION_PAYLOAD_TYPE()).to.equal(
+      expect(await invoker.getEIP712DomainType()).to.equal(eip712DomainType);
+      expect(await invoker.getTransactionType()).to.equal(transactionType);
+      expect(await invoker.getTransactionPayloadType()).to.equal(
         transactionPayloadType
       );
     });
@@ -96,7 +91,7 @@ describe("AccountAbstractionInvoker", () => {
           "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)",
         ]
       );
-      const name = "Account Abstraction Invoker";
+      const name = "Batch Invoker";
       const version = "1.0.0";
       const domainSeparator = ethers.utils.keccak256(
         ethers.utils.defaultAbiCoder.encode(
@@ -111,31 +106,31 @@ describe("AccountAbstractionInvoker", () => {
         )
       );
 
-      expect(await invoker.DOMAIN_SEPARATOR()).to.equal(domainSeparator);
+      expect(await invoker.getDomainSeparator()).to.equal(domainSeparator);
     });
   });
 
   describe("invoke", () => {
     it("Should revert on no payload", async () => {
-      const nonce = await invoker.nonces(alice.address);
+      const nonce = await invoker.getNonce(alice.address);
       const messageWithoutPayload = {
         from: alice.address,
         nonce: nonce,
-        payload: [],
+        payloads: [],
       };
       const signature = getSignature(messageWithoutPayload, alicePk);
 
       await expect(
         invoker.invoke(signature, messageWithoutPayload)
-      ).to.be.revertedWith("No transaction payload");
+      ).to.be.revertedWith("No payloads");
     });
 
     it("Should revert on invalid signature", async () => {
-      const nonce = await invoker.nonces(alice.address);
+      const nonce = await invoker.getNonce(alice.address);
       const message = {
         from: alice.address,
         nonce: nonce,
-        payload: [
+        payloads: [
           { to: mock.address, value: 0, gasLimit: 1000000, data: increment },
         ],
       };
@@ -148,11 +143,11 @@ describe("AccountAbstractionInvoker", () => {
     });
 
     it("Should revert on invalid nonce", async () => {
-      const invalidNonce = (await invoker.nonces(alice.address)).add("1");
+      const invalidNonce = (await invoker.getNonce(alice.address)).add("1");
       const messageWithInvalidNonce = {
         from: alice.address,
         nonce: invalidNonce,
-        payload: [
+        payloads: [
           { to: mock.address, value: 0, gasLimit: 1000000, data: increment },
         ],
       };
@@ -164,11 +159,11 @@ describe("AccountAbstractionInvoker", () => {
     });
 
     it("Should revert on call failure", async () => {
-      const nonce = await invoker.nonces(alice.address);
+      const nonce = await invoker.getNonce(alice.address);
       const messageWithRevertingCall = {
         from: alice.address,
         nonce: nonce,
-        payload: [
+        payloads: [
           { to: mock.address, value: 0, gasLimit: 1000000, data: increment },
           { to: mock.address, value: 0, gasLimit: 1000000, data: causeRevert },
         ],
@@ -181,11 +176,11 @@ describe("AccountAbstractionInvoker", () => {
     });
 
     it("Should revert on leftover value", async () => {
-      const nonce = await invoker.nonces(alice.address);
+      const nonce = await invoker.getNonce(alice.address);
       const message = {
         from: alice.address,
         nonce: nonce,
-        payload: [
+        payloads: [
           { to: mock.address, value: 0, gasLimit: 1000000, data: increment },
         ],
       };
@@ -197,11 +192,11 @@ describe("AccountAbstractionInvoker", () => {
     });
 
     it("Should bundle transactions", async () => {
-      const nonce = await invoker.nonces(alice.address);
+      const nonce = await invoker.getNonce(alice.address);
       const message = {
         from: alice.address,
         nonce,
-        payload: [
+        payloads: [
           {
             to: mock.address,
             value: 1,
@@ -234,22 +229,22 @@ describe("AccountAbstractionInvoker", () => {
   });
 
   describe("Sponsoring examples", () => {
-    let invokerAsBob: AccountAbstractionInvoker;
+    let invokerAsBob: BatchInvoker;
 
     before(async () => {
       invokerAsBob = await ethers.getContractAt(
-        "AccountAbstractionInvoker",
+        "BatchInvoker",
         invoker.address,
         bob
       );
     });
 
     it("Enables transaction sponsoring", async () => {
-      const nonce = await invoker.nonces(alice.address);
+      const nonce = await invoker.getNonce(alice.address);
       const message = {
         from: alice.address,
         nonce,
-        payload: [
+        payloads: [
           {
             to: mock.address,
             value: 0,
@@ -273,11 +268,11 @@ describe("AccountAbstractionInvoker", () => {
     });
 
     it("Prevents manipulation", async () => {
-      const nonce = await invoker.nonces(alice.address);
+      const nonce = await invoker.getNonce(alice.address);
       const message = {
         from: alice.address,
         nonce,
-        payload: [
+        payloads: [
           {
             to: mock.address,
             value: 0,
@@ -289,7 +284,7 @@ describe("AccountAbstractionInvoker", () => {
       const signature = getSignature(message, alicePk);
 
       const modifiedMessage = message;
-      modifiedMessage.payload[0].gasLimit = 5000000;
+      modifiedMessage.payloads[0].gasLimit = 5000000;
 
       await expect(
         invokerAsBob.invoke(signature, modifiedMessage)

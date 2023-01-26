@@ -34,7 +34,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     devnet: {
-      chainId: 4056,
+      chainId: 4052,
       url: process.env.RPC_URL || "",
       accounts:
         process.env.PK_ALICE !== undefined && process.env.PK_BOB !== undefined

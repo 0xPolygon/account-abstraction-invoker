@@ -50,5 +50,5 @@ To redeploy contracts, set environment variable `REDEPLOY=true`. Otherwise, last
 
 ## Acknowledgements
 
-- This example was based on Maarten Zuidhoorn's [EIP-3074 (Batch) Transaction Invoker](https://github.com/Mrtenz/transaction-invoker)
-- Reentrancy Guard by [OpenZeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts)
+- [EIP-3074 (Batch) Transaction Invoker](https://github.com/Mrtenz/transaction-invoker)
+- [OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts)
