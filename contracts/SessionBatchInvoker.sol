@@ -2,6 +2,8 @@
 pragma solidity ^0.8.0;
 
 import {InvokerBase} from "./InvokerBase.sol";
+import {ReentrancyGuard} from "./utils/ReentrancyGuard.sol";
+import {Ownable} from "./utils/Ownable.sol"; // TODO: TBD.
 
 /**
  * @title Session Batch Invoker
@@ -10,11 +12,6 @@ import {InvokerBase} from "./InvokerBase.sol";
  *  Owned Address (EOA), by using `AUTH` and `AUTHCALL`. See https://github.com/0xPolygon/account-abstraction-invoker for more
  *  information.
  */
-
-import {InvokerBase} from "./InvokerBase.sol";
-import {ReentrancyGuard} from "./utils/ReentrancyGuard.sol";
-import {Ownable} from "./utils/Ownable.sol"; // TODO: TBD.
-
 contract SessionBatchInvoker is InvokerBase, ReentrancyGuard, Ownable {
     struct Transaction {
         address from;
@@ -154,8 +151,7 @@ contract SessionBatchInvoker is InvokerBase, ReentrancyGuard, Ownable {
     /* How whitelist updates work:
 
     All session tokens signed before or at the time of scheduling a new whitelist update
-    will expire before the update takes effect, making sure the new rules never apply to them.
-    */
+    will expire before the update takes effect, making sure the new rules never apply to them. */
 
     function scheduleWhitelistUpdate(WhitelistChange[] calldata changes) external onlyOwner {
         WhitelistUpdate storage whitelistUpdate = whitelistUpdates[whitelistUpdatesLength];
