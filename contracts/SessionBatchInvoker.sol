@@ -131,13 +131,12 @@ contract SessionBatchInvoker is InvokerBase, ReentrancyGuard, Ownable {
                                 REVOKING
     //////////////////////////////////////////////////////////////*/
 
-    function revokeToken(Signature calldata signature, SessionToken calldata token) external {
+    function revokeToken(address account, SessionToken calldata token) external {
         require(token.revocable, "Not revocable");
 
-        address signer = authenticate(signature, token);
-        require(signer == msg.sender || msg.sender == token.delegate, "Unauthorized");
+        require(account == msg.sender || msg.sender == token.delegate, "Unauthorized");
 
-        revokedTokens[signer][getCommitHash(token)] = true;
+        revokedTokens[account][getCommitHash(token)] = true;
     }
 
     function isRevoked(address account, SessionToken calldata token) public view returns (bool) {
