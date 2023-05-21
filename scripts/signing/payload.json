@@ -9,7 +9,7 @@
     "Transaction": [
       { "name": "from", "type": "address" },
       { "name": "nonce", "type": "uint256" },
-      { "name": "payload", "type": "TransactionPayload[]" }
+      { "name": "payloads", "type": "TransactionPayload[]" }
     ],
     "TransactionPayload": [
       { "name": "to", "type": "address" },
@@ -20,7 +20,7 @@
   },
   "primaryType": "Transaction",
   "domain": {
-    "name": "Account Abstraction Invoker",
+    "name": "Batch Invoker",
     "version": "1.0.0"
   }
 }

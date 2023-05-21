@@ -24,70 +24,49 @@ SOFTWARE.*/
 
 pragma solidity ^0.8.0;
 
+import {InvokerBase} from "./InvokerBase.sol";
 import {ReentrancyGuard} from "./utils/ReentrancyGuard.sol";
 
 /**
- * @title Account Abstraction Invoker
+ * @title Batch Invoker
  * @author Zero Ekkusu <zeroekkusu.eth>, Maarten Zuidhoorn <maarten@zuidhoorn.com>
  * @notice An EIP-3074 based contract that can send one or more arbitrary transactions in the context of an Externally
  *  Owned Address (EOA), by using `AUTH` and `AUTHCALL`. See https://github.com/0xPolygon/account-abstraction-invoker for more
  *  information.
  */
-contract AccountAbstractionInvoker is ReentrancyGuard {
-    string private constant NAME = "Account Abstraction Invoker";
-    string private constant VERSION = "1.0.0";
-
-    bytes32 public constant EIP712DOMAIN_TYPE =
-        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
-
-    bytes32 public constant TRANSACTION_TYPE = keccak256(
-        "Transaction(address from,uint256 nonce,TransactionPayload[] payload)TransactionPayload(address to,uint256 value,uint256 gasLimit,bytes data)"
-    );
-
-    bytes32 public constant TRANSACTION_PAYLOAD_TYPE =
-        keccak256("TransactionPayload(address to,uint256 value,uint256 gasLimit,bytes data)");
-
-    bytes32 public DOMAIN_SEPARATOR;
-
-    mapping(address => uint256) public nonces;
-
-    struct Signature {
-        uint256 r;
-        uint256 s;
-        bool v;
-    }
-
+contract BatchInvoker is InvokerBase, ReentrancyGuard {
     struct Transaction {
         address from;
         uint256 nonce;
-        TransactionPayload[] payload;
+        TransactionPayload[] payloads;
     }
 
-    struct TransactionPayload {
-        address to;
-        uint256 value;
-        uint256 gasLimit;
-        bytes data;
+    bytes32 private constant TRANSACTION_TYPE = keccak256(
+        "Transaction(address from,uint256 nonce,TransactionPayload[] payloads)TransactionPayload(address to,uint256 value,uint256 gasLimit,bytes data)"
+    );
+
+    bytes32 private constant TRANSACTION_PAYLOAD_TYPE =
+        keccak256("TransactionPayload(address to,uint256 value,uint256 gasLimit,bytes data)");
+
+    mapping(address => uint256) private nonces;
+
+    constructor() InvokerBase("Batch Invoker", "1.0.0") {}
+
+    function getTransactionType() external pure returns (bytes32) {
+        return TRANSACTION_TYPE;
     }
 
-    constructor() {
-        updateDomainSeparator();
+    function getTransactionPayloadType() external pure returns (bytes32) {
+        return TRANSACTION_PAYLOAD_TYPE;
     }
 
-    /**
-     * @notice This function can be used to update the domain separator, in case the chain ID changes.
-     */
-    function updateDomainSeparator() public {
-        DOMAIN_SEPARATOR = keccak256(
-            abi.encode(
-                EIP712DOMAIN_TYPE,
-                keccak256(abi.encodePacked(NAME)),
-                keccak256(abi.encodePacked(VERSION)),
-                block.chainid,
-                address(this)
-            )
-        );
+    function getNonce(address account) external view returns (uint256) {
+        return nonces[account];
     }
+
+    /*//////////////////////////////////////////////////////////////
+                                INVOKING
+    //////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Authenticate and send the provided transaction payload(s) in the context of the signer. This function
@@ -96,26 +75,31 @@ contract AccountAbstractionInvoker is ReentrancyGuard {
      * @param transaction The nonce and payload(s) to send.
      */
     function invoke(Signature calldata signature, Transaction calldata transaction) external payable nonReentrant {
-        require(transaction.payload.length > 0, "No transaction payload");
+        require(transaction.payloads.length > 0, "No payloads");
 
         address signer = authenticate(signature, transaction);
         // We require the signer to be the from address
         // because it is more likely to recover *some* address than address(0).
         require(signer == transaction.from, "Invalid signature");
+
         require(transaction.nonce == nonces[signer], "Invalid nonce");
 
         nonces[signer] += 1;
 
         uint256 startBalance = address(this).balance - msg.value;
 
-        for (uint256 i = 0; i < transaction.payload.length; i++) {
-            bool success = call(transaction.payload[i]);
+        for (uint256 i = 0; i < transaction.payloads.length; i++) {
+            bool success = call(transaction.payloads[i]);
             require(success, "Transaction failed");
         }
 
         // To ensure that the caller does not send more funds than used in the transaction payload, we check if the contract
         // balance is less or equal to the starting balance here.
         require(address(this).balance <= startBalance, "Invalid balance");
+    }
+
+    function validatePayload(TransactionPayload calldata) internal pure override returns (bool) {
+        return true;
     }
 
     /**
@@ -126,7 +110,7 @@ contract AccountAbstractionInvoker is ReentrancyGuard {
      * @return signer The recovered signer, or `0x0` if the signature is invalid.
      */
     function authenticate(Signature calldata signature, Transaction calldata transaction)
-        private
+        internal
         view
         returns (address signer)
     {
@@ -142,31 +126,18 @@ contract AccountAbstractionInvoker is ReentrancyGuard {
         }
     }
 
-    /**
-     * @notice Send an authenticated call to the address provided in the payload.
-     * @dev Currently this function does not return the call data.
-     * @param payload The payload to send.
-     * @return success Whether the call succeeded.
-     */
-    function call(TransactionPayload calldata payload) private returns (bool success) {
-        uint256 gasLimit = payload.gasLimit;
-        address to = payload.to;
-        uint256 value = payload.value;
-        bytes memory data = payload.data;
-
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            success := authcall(gasLimit, to, value, 0, add(data, 0x20), mload(data), 0, 0)
-        }
-    }
+    /*//////////////////////////////////////////////////////////////
+                                HASHING
+    //////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Get the EIP-712 commit hash for a transaction, that can be used for authentication.
      * @param transaction The transaction to hash.
      * @return The commit hash, including the EIP-712 prefix and domain separator.
      */
-    function getCommitHash(Transaction calldata transaction) private view returns (bytes32) {
-        return keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), DOMAIN_SEPARATOR, hash(transaction)));
+    function getCommitHash(Transaction calldata transaction) internal view returns (bytes32) {
+        return
+            keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), getDomainSeparator(), hashTransaction(transaction)));
     }
 
     /**
@@ -174,19 +145,21 @@ contract AccountAbstractionInvoker is ReentrancyGuard {
      * @param transaction The transaction to hash.
      * @return The hashed transaction.
      */
-    function hash(Transaction calldata transaction) private pure returns (bytes32) {
-        return keccak256(abi.encode(TRANSACTION_TYPE, transaction.from, transaction.nonce, hash(transaction.payload)));
+    function hashTransaction(Transaction calldata transaction) internal pure returns (bytes32) {
+        return keccak256(
+            abi.encode(TRANSACTION_TYPE, transaction.from, transaction.nonce, hashPayloads(transaction.payloads))
+        );
     }
 
     /**
      * @notice Get the EIP-712 hash for a transaction payload array.
-     * @param payload The payload(s) to hash.
+     * @param payloads The payload(s) to hash.
      * @return The hashed transaction payloads.
      */
-    function hash(TransactionPayload[] calldata payload) private pure returns (bytes32) {
-        bytes32[] memory values = new bytes32[](payload.length);
-        for (uint256 i = 0; i < payload.length; i++) {
-            values[i] = hash(payload[i]);
+    function hashPayloads(TransactionPayload[] calldata payloads) internal pure returns (bytes32) {
+        bytes32[] memory values = new bytes32[](payloads.length);
+        for (uint256 i = 0; i < payloads.length; i++) {
+            values[i] = hashPayload(payloads[i]);
         }
 
         return keccak256(abi.encodePacked(values));
@@ -197,7 +170,7 @@ contract AccountAbstractionInvoker is ReentrancyGuard {
      * @param payload The payload to hash.
      * @return The hashed transaction payload.
      */
-    function hash(TransactionPayload calldata payload) private pure returns (bytes32) {
+    function hashPayload(TransactionPayload calldata payload) internal pure returns (bytes32) {
         return keccak256(
             abi.encode(TRANSACTION_PAYLOAD_TYPE, payload.to, payload.value, payload.gasLimit, keccak256(payload.data))
         );
